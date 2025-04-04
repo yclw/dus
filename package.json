@@ -2,12 +2,11 @@
   "name": "bjmfapp-gps-signin",
   "version": "1.0.0",
   "description": "班级魔方GPS自动签到工具",
-  "main": "src/index.js",
-  "bin": {
-    "bjmf-signin": "./src/index.js"
-  },
+  "main": "main.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
     "sign": "node src/index.js --sign",
     "init": "node src/index.js --init"
   },
@@ -20,12 +19,37 @@
   "author": "",
   "license": "GPL-3.0",
   "dependencies": {
+    "auto-launch": "^5.0.6",
     "axios": "^1.6.2",
     "cheerio": "^1.0.0-rc.12",
     "commander": "^11.1.0",
+    "electron-store": "^10.0.1",
     "node-schedule": "^2.1.1"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.bjmfapp.gpssignin",
+    "productName": "班级魔方GPS签到工具",
+    "mac": {
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility"
+    }
   },
   "engines": {
     "node": ">=14.0.0"
   }
-} 
+}
