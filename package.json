@@ -32,7 +32,7 @@
   },
   "build": {
     "appId": "com.bjmfapp.gpssignin",
-    "productName": "班级魔方GPS签到工具",
+    "productName": "BJMFSignin",
     "publish": {
       "provider": "github",
       "owner": "yclw",
