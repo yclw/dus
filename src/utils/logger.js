@@ -22,7 +22,7 @@ const ensureLogDir = () => {
  */
 class LoggerClass {
     constructor() {
-        this.logFile = path.join(ensureLogDir(), 'AutoCheckBJMF.log');
+        this.logFile = path.join(ensureLogDir(), 'LOG.log');
         this.level = 'info'; // 默认日志级别
         this.levels = {
             'info': 0,

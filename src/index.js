@@ -73,7 +73,7 @@ const main = async () => {
                             if (jsonData.pushplus) {
                                 await sendPushNotification(
                                     jsonData.pushplus,
-                                    '北京名师课堂GPS定时签到结果',
+                                    '班级魔方GPS定时签到结果',
                                     message
                                 );
                             }

@@ -9,7 +9,7 @@ const { sendPushNotification } = require('../utils/notify');
 const setupCommandLine = () => {
     program
         .version('1.0.0')
-        .description('北京名师课堂GPS签到工具');
+        .description('班级魔方GPS签到工具');
 
     program
         .option('-i, --init', '初始化配置')
@@ -83,7 +83,7 @@ const handleCommandLine = async () => {
                     if (jsonData.pushplus) {
                         await sendPushNotification(
                             jsonData.pushplus,
-                            '北京名师课堂GPS签到结果',
+                            '班级魔方GPS签到结果',
                             message
                         );
                     }

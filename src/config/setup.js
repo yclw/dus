@@ -25,7 +25,7 @@ const initConfig = async () => {
     const rl = createRLInterface();
     const jsonData = loadConfig();
     
-    console.log('开始配置北京名师课堂GPS签到工具');
+    console.log('开始配置班级魔方GPS签到工具');
     console.log('-------------------------------');
     
     try {

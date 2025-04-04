@@ -46,7 +46,7 @@ const loadConfig = () => {
         } else {
             Logger.info('未找到配置文件，创建默认配置');
             
-            console.log('欢迎使用北京名师课堂GPS签到工具！');
+            console.log('欢迎使用班级魔方GPS签到工具！');
             console.log('首次使用需要进行配置，请按照提示操作。');
             console.log('您需要以下信息：');
             console.log('1. 班级魔方网站的Cookie');
