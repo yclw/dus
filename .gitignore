@@ -2,7 +2,6 @@ config.json
 logs
 node_modules
 package-lock.json
-.gitignore
-.DS_Store
 .idea
 .vscode
+.DS_Store
