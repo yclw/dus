@@ -33,6 +33,11 @@
   "build": {
     "appId": "com.bjmfapp.gpssignin",
     "productName": "班级魔方GPS签到工具",
+    "publish": {
+      "provider": "github",
+      "owner": "yoclo",
+      "repo": "dus"
+    },
     "mac": {
       "category": "public.app-category.utilities"
     },
