@@ -1,4 +1,4 @@
-# 班级魔方GPS自动签到
+# dus -- 班级魔方GPS自动签到
 
 一个用于班级魔方的自动GPS签到工具，支持多用户、定时任务和消息推送。
 
@@ -37,8 +37,8 @@
 
 ```bash
 # 克隆仓库
-git clone <仓库地址>
-cd bjmfapp-gps-signin
+git clone https://github.com/yclw/dus.git
+cd dus
 
 # 安装依赖
 npm install
@@ -105,4 +105,3 @@ node src/index.js --log info
 
 - 请确保提供的Cookie有效
 - GPS坐标请使用有效的经纬度格式
-- 定时任务请使用标准cron格式
