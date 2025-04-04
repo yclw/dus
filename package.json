@@ -16,7 +16,10 @@
     "bjmfapp",
     "automation"
   ],
-  "author": "",
+  "author": {
+    "name": "yc",
+    "email": "2233@qq.com"
+  },
   "license": "GPL-3.0",
   "dependencies": {
     "auto-launch": "^5.0.6",
