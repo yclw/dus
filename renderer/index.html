@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班级魔方GPS自动签到工具</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>班级魔方GPS自动签到工具</h1>
+        
+        <div class="tab-container">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="config">配置</button>
+                <button class="tab-btn" data-tab="sign">签到</button>
+            </div>
+            
+            <div class="tab-content">
+                <!-- 配置标签页 -->
+                <div class="tab-pane active" id="config">
+                    <form id="config-form">
+                        <div class="form-group">
+                            <label for="scheduletime">定时任务时间 (24小时制, 例如: 08:00)</label>
+                            <input type="time" id="scheduletime" name="scheduletime">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lng">经度</label>
+                            <input type="text" id="lng" name="lng" placeholder="例如: 116.123456">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lat">纬度</label>
+                            <input type="text" id="lat" name="lat" placeholder="例如: 39.123456">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="acc">海拔/精度</label>
+                            <input type="text" id="acc" name="acc" placeholder="例如: 10">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="pushplus">PushPlus Token (可选，用于推送通知)</label>
+                            <input type="text" id="pushplus" name="pushplus" placeholder="可选, 推送通知token">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Cookie配置 <button type="button" id="help-cookie-btn" class="btn btn-small">如何获取?</button></label>
+                            <div id="cookies-container">
+                                <!-- 用户Cookie列表将在这里动态生成 -->
+                            </div>
+                            <button type="button" id="add-cookie-btn" class="btn btn-secondary">添加用户Cookie</button>
+                        </div>
+
+                        <div class="form-group" id="class-selection-container" style="display: none;">
+                            <label>选择班级</label>
+                            <select id="class-select">
+                                <!-- 班级列表将在这里动态生成 -->
+                            </select>
+                            <div class="loading-spinner" id="class-loading" style="display: none;">
+                                <div class="spinner"></div>
+                                <span>正在获取班级列表...</span>
+                            </div>
+                            <button type="button" id="fetch-classes-btn" class="btn btn-secondary">获取班级列表</button>
+                        </div>
+                        
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="debug" name="debug">
+                            <label for="debug">调试模式</label>
+                        </div>
+
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="auto-launch" name="auto-launch">
+                            <label for="auto-launch">开机自动启动</label>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">保存配置</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- 签到标签页 -->
+                <div class="tab-pane" id="sign">
+                    <div class="card">
+                        <h2>签到状态</h2>
+                        <div id="sign-status">
+                            <p>未执行签到</p>
+                        </div>
+                        <button id="manual-sign-btn" class="btn btn-primary">立即签到</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h2>定时任务</h2>
+                        <div id="task-status">
+                            <p>未设置定时任务</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 通知区域 -->
+        <div id="notification-container"></div>
+        
+        <!-- Cookie获取帮助对话框 -->
+        <div id="cookie-help-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>如何获取Cookie?</h2>
+                <div class="help-steps">
+                    <ol>
+                        <li>使用Chrome或Edge浏览器打开<a href="https://k8n.cn/student/" target="_blank">班级魔方</a>并登录您的账号</li>
+                        <li>登录成功后，按F12键或右键点击页面空白处选择"检查"打开开发者工具</li>
+                        <li>在开发者工具中切换到"网络/Network"选项卡</li>
+                        <li>刷新页面或者在页面上随意点击一个功能（例如"我的班级"）</li>
+                        <li>在Network选项卡中找到任意一个XHR请求，点击查看</li>
+                        <li>在请求头(Headers)中找到"Cookie"字段</li>
+                        <li>复制整个Cookie字段的内容</li>
+                        <li>将复制的内容粘贴到本工具的配置中</li>
+                    </ol>
+                    <div class="cookie-help-image">
+                        <img src="../docs/cookie.png" alt="Cookie获取示意图" onerror="this.style.display='none'; document.getElementById('image-error').style.display='block';">
+                        <div id="image-error" style="display:none;">
+                            <p>图片加载失败。您可以参考上述步骤获取Cookie。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cookie模板 -->
+    <template id="cookie-template">
+        <div class="cookie-item">
+            <div class="form-group">
+                <label>用户信息</label>
+                <input type="text" class="username" placeholder="用户名将自动获取" readonly>
+            </div>
+            <div class="form-group">
+                <label>Cookie</label>
+                <textarea class="cookie-value" placeholder="在这里粘贴Cookie"></textarea>
+            </div>
+            <button type="button" class="btn btn-secondary check-cookie-btn">验证Cookie</button>
+            <button type="button" class="btn btn-danger remove-cookie-btn">删除</button>
+        </div>
+    </template>
+    
+    <script src="./renderer.js"></script>
+</body>
+</html> 
