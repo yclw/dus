@@ -12,7 +12,6 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-      max-parallel: 1
     
     steps:
       - name: Checkout Code
@@ -29,6 +28,4 @@ jobs:
       - name: Build and Publish
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          gh release create v${{ github.ref_name }} --target main --title "Release ${{ github.ref_name }}" --notes "Automated build"
-          npm run build -- --publish always
+        run: npm run build -- --publish always
