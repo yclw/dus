@@ -7,7 +7,7 @@
 - **多用户支持**: 支持配置多个Cookie，同时为多个用户进行签到
 - **自动获取信息**: 自动获取班级列表，无需手动输入班级ID
 - **自动识别用户**: 自动识别Cookie对应的用户名，提升用户体验
-- **定时任务**: 支持配置cron格式的定时任务
+- **定时任务**: 支持配置的定时任务
 - **消息推送**: 支持使用PushPlus进行签到结果通知
 - **GPS模拟**: 模拟GPS坐标偏移，使签到位置更真实
 
@@ -36,15 +36,15 @@
 ## 安装
 
 ```bash
+# 下载安装Node.js
+# 访问 https://nodejs.org/zh-cn/ 下载安装最新LTS版本
+
 # 克隆仓库
 git clone https://github.com/yclw/dus.git
 cd dus
 
 # 安装依赖
 npm install
-
-# 全局安装（可选）
-npm install -g .
 ```
 
 ## 使用方法
@@ -57,9 +57,6 @@ npm run init
 
 # 或者使用命令行
 node src/index.js --init
-
-# 如果全局安装
-bjmf-signin --init
 ```
 
 ### 执行签到
@@ -70,9 +67,6 @@ npm run sign
 
 # 或者使用命令行
 node src/index.js --sign
-
-# 如果全局安装
-bjmf-signin --sign
 ```
 
 ### 设置日志级别
@@ -90,7 +84,20 @@ node src/index.js --log info
 2. **班级ID**: 可以从获取的班级列表中选择，也可以手动输入
 3. **GPS坐标**: 签到位置的经纬度
 4. **PushPlus Token**: 用于推送签到结果（可选）
-5. **定时任务**: cron格式的定时任务配置（可选）
+5. **定时任务**: 定时任务配置（可选）
+
+### Cookie获取教程
+
+1. 使用Chrome或Edge浏览器打开[班级魔方](https://k8n.cn/student/)并登录您的账号
+2. 登录成功后，按F12键或右键点击页面空白处选择"检查"打开开发者工具
+3. 在开发者工具中切换到"网络/Network"选项卡
+4. 刷新页面或者在页面上随意点击一个功能（例如"我的班级"）
+5. 在Network选项卡中找到任意一个XHR请求，点击查看
+6. 在请求头(Headers)中找到"Cookie"字段
+7. 复制整个Cookie字段的内容
+8. 将复制的内容粘贴到本工具的配置中
+
+![Cookie获取示意图](docs/cookie.png)
 
 ## 多用户支持
 
