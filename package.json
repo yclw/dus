@@ -39,7 +39,8 @@
     "publish": {
       "provider": "github",
       "owner": "yclw",
-      "repo": "dus"
+      "repo": "dus",
+      "vPrefixedTagName": true
     },
     "mac": {
       "category": "public.app-category.utilities"
