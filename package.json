@@ -1,0 +1,31 @@
+{
+  "name": "bjmfapp-gps-signin",
+  "version": "1.0.0",
+  "description": "北京名师课堂GPS自动签到工具",
+  "main": "src/index.js",
+  "bin": {
+    "bjmf-signin": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "sign": "node src/index.js --sign",
+    "init": "node src/index.js --init"
+  },
+  "keywords": [
+    "gps",
+    "signin",
+    "bjmfapp",
+    "automation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12",
+    "commander": "^11.1.0",
+    "node-schedule": "^2.1.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+} 
