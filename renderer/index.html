@@ -26,6 +26,49 @@
                         </div>
                         
                         <div class="form-group">
+                            <div class="checkbox">
+                                <input type="checkbox" id="schedule-range-enabled">
+                                <label for="schedule-range-enabled">启用时间范围签到</label>
+                            </div>
+                        </div>
+                        
+                        <div id="schedule-range-container" style="display: none;">
+                            <div class="form-group time-range">
+                                <label>签到时间范围</label>
+                                <div class="time-inputs">
+                                    <div class="time-input">
+                                        <label for="start-time">开始时间</label>
+                                        <input type="time" id="start-time" name="start-time">
+                                    </div>
+                                    <div class="time-input">
+                                        <label for="end-time">结束时间</label>
+                                        <input type="time" id="end-time" name="end-time">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <input type="checkbox" id="retry-enabled" checked>
+                                    <label for="retry-enabled">启用失败重试</label>
+                                </div>
+                            </div>
+                            
+                            <div id="retry-settings" class="form-group">
+                                <label for="retry-interval">重试间隔 (分钟)</label>
+                                <input type="number" id="retry-interval" name="retry-interval" min="1" max="60" value="5">
+                                
+                                <label for="max-retries">最大重试次数</label>
+                                <input type="number" id="max-retries" name="max-retries" min="1" max="10" value="3">
+                                
+                                <div class="checkbox infinite-retry">
+                                    <input type="checkbox" id="infinite-retry">
+                                    <label for="infinite-retry">启用无限重试 (忽略最大次数)</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
                             <label for="lng">经度</label>
                             <input type="text" id="lng" name="lng" placeholder="例如: 116.123456">
                         </div>
@@ -71,6 +114,11 @@
                         </div>
 
                         <div class="form-group checkbox">
+                            <input type="checkbox" id="system-notify" name="system-notify" checked>
+                            <label for="system-notify">系统通知</label>
+                        </div>
+
+                        <div class="form-group checkbox">
                             <input type="checkbox" id="auto-launch" name="auto-launch">
                             <label for="auto-launch">开机自动启动</label>
                         </div>
@@ -89,6 +137,7 @@
                             <p>未执行签到</p>
                         </div>
                         <button id="manual-sign-btn" class="btn btn-primary">立即签到</button>
+                        <button id="reset-sign-status-btn" class="btn btn-secondary">重置今日签到状态</button>
                     </div>
                     
                     <div class="card">

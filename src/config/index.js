@@ -42,9 +42,19 @@ const CONFIG = {
         "acc": "",         // 海拔
         "time": 0,         // 等待时间（已弃用）
         "cookies": [],     // 用户令牌及信息 [{cookie: "...", username: "..."}]
-        "scheduletime": "", // 定时任务
+        "scheduletime": "", // 定时任务（旧版单一时间点，保留向后兼容）
+        "scheduleRange": {  // 定时任务时间范围
+            "enabled": false, // 是否启用时间范围
+            "startTime": "", // 开始时间 (HH:MM)
+            "endTime": "",   // 结束时间 (HH:MM)
+            "retryEnabled": true, // 是否启用失败重试
+            "retryInterval": 5,  // 重试间隔（分钟）
+            "maxRetries": 3,     // 最大重试次数
+            "infiniteRetry": false // 是否启用无限重试
+        },
         "pushplus": "",    // pushplus推送令牌
         "debug": false,    // 调试模式
+        "systemNotify": true, // 系统通知
         "configLock": false // 配置编辑状态
     }
 };
@@ -68,6 +78,27 @@ const loadConfig = () => {
                 Logger.info('检测到旧版本配置，正在转换为新版本...');
                 jsonData.cookies = [{ cookie: jsonData.cookie, username: '未知用户' }];
                 delete jsonData.cookie;
+                saveConfig(jsonData);
+            }
+            
+            // 兼容未添加时间范围的配置
+            if (!jsonData.scheduleRange) {
+                Logger.info('检测到配置中无时间范围设置，添加默认设置');
+                jsonData.scheduleRange = CONFIG.defaultSettings.scheduleRange;
+                
+                // 如果有老的单时间点，尝试将其设为开始时间
+                if (jsonData.scheduletime) {
+                    jsonData.scheduleRange.startTime = jsonData.scheduletime;
+                    // 结束时间设为开始时间后1小时
+                    try {
+                        const [hour, minute] = jsonData.scheduletime.split(':').map(Number);
+                        const endHour = (hour + 1) % 24;
+                        jsonData.scheduleRange.endTime = `${endHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                    } catch (e) {
+                        jsonData.scheduleRange.endTime = jsonData.scheduletime;
+                    }
+                }
+                
                 saveConfig(jsonData);
             }
             

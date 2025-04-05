@@ -34,15 +34,23 @@ const findSignInTasks = (html) => {
                 console.log(`找到GPS签到元素 onclick: ${onclick}`);
                 const match = onclick.match(/punch_gps\((\d+)\)/);
                 if (match && match[1]) {
-                    matches.push(match[1]);
-                    console.log(`已提取签到ID: ${match[1]}`);
+                    // 检查该元素内是否包含"未签"标签，只有未签到的才添加到任务列表
+                    const cardBody = $(`#punchcard_${match[1]}`);
+                    const signStatus = cardBody.find('.layui-badge').text().trim();
+                    
+                    if (signStatus === '未签') {
+                        matches.push(match[1]);
+                        console.log(`已提取未签到任务ID: ${match[1]}`);
+                    } else {
+                        console.log(`已跳过已签到任务ID: ${match[1]}`);
+                    }
                 }
             }
         });
         
         if (matches.length === 0) {
             // 输出页面内容摘要以便调试
-            console.log('所有方法均未找到GPS签到任务，以下是页面相关元素摘要:');
+            console.log('所有方法均未找到未签到的GPS签到任务，以下是页面相关元素摘要:');
             $('a, button, .card, [onclick], form').each((i, el) => {
                 const text = $(el).text().trim();
                 const onclick = $(el).attr('onclick');
@@ -54,7 +62,7 @@ const findSignInTasks = (html) => {
                 }
             });
         } else {
-            console.log(`总共找到 ${matches.length} 个签到任务`);
+            console.log(`总共找到 ${matches.length} 个未签到任务`);
         }
         
         return matches;
@@ -119,17 +127,62 @@ const signIn = async (cookieObj, longitude, latitude, classId) => {
             console.log(`保存HTML失败: ${err.message}`);
         }
         
-        // 查找签到任务
-        console.log(`开始解析页面查找签到任务...`);
-        const signInTasks = findSignInTasks(punchResponse.data);
+        // 检查是否有任何签到任务（无论已签还是未签）
+        const $ = cheerio.load(punchResponse.data);
+        const allTasks = [];
         
-        if (signInTasks.length === 0) {
-            console.log(`用户 [${username}] 未找到进行中的签到任务`);
-            Logger.info(`用户 [${username}] 未找到进行中的签到任务`);
-            return { success: true, message: '未找到进行中的签到任务' };
+        // 查找所有签到任务
+        $('[onclick^="punch_gps("]').each((index, element) => {
+            const onclick = $(element).attr('onclick');
+            if (onclick) {
+                const match = onclick.match(/punch_gps\((\d+)\)/);
+                if (match && match[1]) {
+                    allTasks.push(match[1]);
+                }
+            }
+        });
+        
+        // 查找所有已签任务（包括那些不能点击的灰色卡片）
+        $('.card').each((index, element) => {
+            const cardId = $(element).find('.card-body').attr('id');
+            if (cardId && cardId.startsWith('punchcard_')) {
+                const taskId = cardId.replace('punchcard_', '');
+                if (!allTasks.includes(taskId)) {
+                    const signStatus = $(element).find('.layui-badge').text().trim();
+                    if (signStatus === '已签') {
+                        console.log(`找到额外的已签任务ID: ${taskId}（无法点击）`);
+                        allTasks.push(taskId);
+                    }
+                }
+            }
+        });
+        
+        if (allTasks.length === 0) {
+            console.log(`用户 [${username}] 未找到任何签到任务`);
+            Logger.info(`用户 [${username}] 未找到任何签到任务`);
+            return { success: false, message: '未找到任何签到任务', noTask: true };
         }
         
-        console.log(`找到 ${signInTasks.length} 个签到任务，开始签到...`);
+        // 查找未签到任务
+        console.log(`开始解析页面查找未签到任务...`);
+        const signInTasks = findSignInTasks(punchResponse.data);
+        
+        // 统计已签任务数量
+        const signedTasks = allTasks.length - signInTasks.length;
+        
+        if (signInTasks.length === 0 && signedTasks > 0) {
+            console.log(`用户 [${username}] 所有任务已签到完成，共有 ${signedTasks} 个已签任务`);
+            Logger.info(`用户 [${username}] 所有任务已签到完成，共有 ${signedTasks} 个已签任务`);
+            return { success: true, message: `所有任务已签到完成，共有 ${signedTasks} 个已签任务`, allSigned: true };
+        }
+        
+        if (signInTasks.length === 0) {
+            console.log(`用户 [${username}] 未找到进行中的未签到任务`);
+            Logger.info(`用户 [${username}] 未找到进行中的未签到任务`);
+            return { success: false, message: '未找到进行中的未签到任务', noTask: true };
+        }
+        
+        console.log(`找到 ${signInTasks.length} 个未签到任务，开始签到，已跳过 ${signedTasks} 个已签任务`);
         
         // 执行签到
         for (const signId of signInTasks) {
@@ -244,7 +297,7 @@ const qiandao = async (cookieObjects, longitude, latitude, classId) => {
     // 检查参数
     if (!cookieObjects || cookieObjects.length === 0) {
         Logger.error('未提供有效的Cookie，无法执行签到');
-        return { success: false, results: [], errorCookies: [] };
+        return { success: false, results: [], errorCookies: [], noTask: true };
     }
     
     // 遍历所有cookie进行签到
@@ -269,7 +322,10 @@ const qiandao = async (cookieObjects, longitude, latitude, classId) => {
     return {
         success: results.some(r => r.success),
         results,
-        errorCookies
+        errorCookies,
+        // 添加无任务和全部已签标记
+        noTask: results.length > 0 && results.every(r => r.noTask),
+        allSigned: results.length > 0 && results.every(r => r.allSigned)
     };
 };
 
@@ -277,4 +333,4 @@ module.exports = {
     signIn,
     qiandao,
     findSignInTasks
-}; 
+};

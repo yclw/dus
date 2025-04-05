@@ -30,5 +30,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onNotification: (callback) => {
     ipcRenderer.on('notification', (_, notification) => callback(notification));
     return () => ipcRenderer.removeListener('notification', callback);
-  }
+  },
+  
+  // 获取今日签到状态
+  getSignStatus: () => ipcRenderer.invoke('get-sign-status'),
+  
+  // 重置今日签到状态
+  resetSignStatus: () => ipcRenderer.invoke('reset-sign-status'),
 }); 

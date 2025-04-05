@@ -336,4 +336,82 @@ select {
 @keyframes slideDown {
     from { transform: translateY(-50px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
+}
+
+/* 时间范围样式 */
+.time-range {
+    margin-bottom: 20px;
+}
+
+.time-inputs {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.time-input {
+    flex: 1;
+}
+
+#schedule-range-container {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border-left: 3px solid #1a73e8;
+}
+
+#retry-settings {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+#retry-settings .infinite-retry {
+    grid-column: 1 / span 2;
+    margin-top: 10px;
+    padding: 8px;
+    background-color: rgba(255, 152, 0, 0.1);
+    border-radius: 4px;
+    border-left: 3px solid #ff9800;
+}
+
+#retry-settings label {
+    margin-top: 10px;
+}
+
+input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 14px;
+}
+
+/* 活动时间范围 */
+.active-range {
+    color: #4caf50;
+    font-weight: bold;
+    background-color: rgba(76, 175, 80, 0.1);
+    padding: 8px;
+    border-radius: 4px;
+    border-left: 3px solid #4caf50;
+    margin-top: 10px;
+}
+
+.success-text {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+.error-text {
+    color: #f44336;
+    font-weight: bold;
+}
+
+.info-text {
+    color: #2196F3;
+    font-weight: bold;
 } 
