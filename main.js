@@ -23,7 +23,9 @@ let storeReady = false;
 (async () => {
   try {
     const { default: Store } = await import('electron-store');
-    store = new Store();
+    store = new Store({
+      cwd: app.getPath('userData') // 确保store使用正确的路径
+    });
     storeReady = true;
     Logger.info('存储初始化成功');
     
@@ -66,6 +68,9 @@ function createWindow() {
 
 // 当Electron完成初始化并准备创建浏览器窗口时调用此方法
 app.whenReady().then(() => {
+  // 确保日志使用正确的路径
+  Logger.reinitLogPath();
+  
   createWindow();
 
   app.on('activate', function () {

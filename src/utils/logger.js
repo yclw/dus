@@ -1,12 +1,36 @@
 const fs = require('fs');
 const path = require('path');
 
+// 尝试导入electron，但如果不在electron环境中不会出错
+let app;
+try {
+    const electron = require('electron');
+    app = electron.app || (electron.remote && electron.remote.app);
+} catch (error) {
+    // 忽略错误，保持app为undefined
+}
+
 /**
  * 确保日志目录存在
  * @returns {string} - 日志目录路径
  */
 const ensureLogDir = () => {
-    const logDir = path.join(process.cwd(), 'logs');
+    let logDir;
+
+    // 如果在Electron环境中，使用userData目录
+    if (app && app.getPath) {
+        try {
+            const userDataPath = app.getPath('userData');
+            logDir = path.join(userDataPath, 'logs');
+        } catch (err) {
+            console.error(`获取Electron用户数据路径失败: ${err.message}`);
+            logDir = path.join(process.cwd(), 'logs');
+        }
+    } else {
+        // 在非Electron环境中使用当前工作目录
+        logDir = path.join(process.cwd(), 'logs');
+    }
+
     if (!fs.existsSync(logDir)) {
         try {
             fs.mkdirSync(logDir, { recursive: true });
@@ -29,6 +53,11 @@ class LoggerClass {
             'warning': 1,
             'error': 2
         };
+    }
+
+    // 重新初始化日志路径（在app准备好后调用）
+    reinitLogPath() {
+        this.logFile = path.join(ensureLogDir(), 'LOG.log');
     }
 
     /**

@@ -2,6 +2,35 @@ const fs = require('fs');
 const path = require('path');
 const { Logger } = require('../utils/logger');
 
+// 尝试导入electron，但如果不在electron环境中不会出错
+let app;
+try {
+    const electron = require('electron');
+    app = electron.app || (electron.remote && electron.remote.app);
+} catch (error) {
+    // 忽略错误，保持app为undefined
+}
+
+// 获取正确的配置文件路径
+const getConfigPath = () => {
+    try {
+        // 如果在Electron环境中运行并且app已初始化
+        if (app && app.getPath) {
+            try {
+                const userDataPath = app.getPath('userData');
+                return path.join(userDataPath, 'config.json');
+            } catch (e) {
+                Logger.warning(`获取Electron用户数据路径失败: ${e.message}`);
+            }
+        }
+    } catch (error) {
+        Logger.warning(`获取配置路径出错: ${error.message}`);
+    }
+    
+    // 回退到当前工作目录
+    return path.join(process.cwd(), 'config.json');
+};
+
 // 配置常量
 const CONFIG = {
     fileName: "config.json",
@@ -27,7 +56,7 @@ const printDivider = (title) => {
 
 // 加载配置
 const loadConfig = () => {
-    const configPath = path.join(CONFIG.currentDirectory, CONFIG.fileName);
+    const configPath = getConfigPath();
     
     try {
         if (fs.existsSync(configPath)) {
@@ -64,11 +93,17 @@ const loadConfig = () => {
 
 // 保存配置
 const saveConfig = (data) => {
-    const configPath = path.join(CONFIG.currentDirectory, CONFIG.fileName);
+    const configPath = getConfigPath();
     
     try {
+        // 确保目录存在
+        const configDir = path.dirname(configPath);
+        if (!fs.existsSync(configDir)) {
+            fs.mkdirSync(configDir, { recursive: true });
+        }
+        
         fs.writeFileSync(configPath, JSON.stringify(data, null, 4), 'utf8');
-        console.log(`数据已保存到${CONFIG.currentDirectory}下的${CONFIG.fileName}中。`);
+        console.log(`数据已保存到配置文件: ${configPath}`);
         return true;
     } catch (error) {
         Logger.error(`保存配置文件失败: ${error.message}`);
