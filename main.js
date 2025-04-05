@@ -56,20 +56,60 @@ let mainWindow;
 // 创建系统托盘
 function createTray() {
   try {
-    // 确定应用图标路径
-    const iconPath = path.join(__dirname, 'renderer', 'assets', 'icon.png');
+    const { nativeImage } = require('electron');
+    let trayIcon = null;
     
-    // 检查图标是否存在
-    if (!fs.existsSync(iconPath)) {
-      Logger.warning(`创建托盘时发现图标不存在: ${iconPath}`);
-      // 尝试使用内置的默认图标
-      appIcon = null;
-    } else {
-      appIcon = iconPath;
+    // 确保assets目录存在
+    const assetsDir = path.join(__dirname, 'renderer', 'assets');
+    if (!fs.existsSync(assetsDir)) {
+      fs.mkdirSync(assetsDir, { recursive: true });
+      Logger.info(`创建资源目录: ${assetsDir}`);
     }
     
-    // 创建托盘图标，使用appIcon或nativeImage.createEmpty()
-    tray = new Tray(appIcon || null);
+    // macOS需要特殊处理
+    if (process.platform === 'darwin') {
+      // 尝试使用模板图标(这是macOS推荐的做法)
+      const templateIconPath = path.join(assetsDir, 'icon-template.png');
+      const regularIconPath = path.join(assetsDir, 'icon.png');
+      
+      if (fs.existsSync(templateIconPath)) {
+        // 如果模板图标存在，使用它
+        const image = nativeImage.createFromPath(templateIconPath);
+        image.setTemplateImage(true); // 设置为模板图像
+        trayIcon = image;
+        Logger.info('使用模板图标');
+      } else if (fs.existsSync(regularIconPath)) {
+        // 如果普通图标存在，转换为模板
+        const image = nativeImage.createFromPath(regularIconPath);
+        image.setTemplateImage(true); // 尝试将普通图标设置为模板
+        trayIcon = image;
+        Logger.info('将普通图标转换为模板图标');
+        
+        // 复制一份作为模板图标
+        try {
+          fs.copyFileSync(regularIconPath, templateIconPath);
+          Logger.info(`已将普通图标复制为模板图标: ${templateIconPath}`);
+        } catch (err) {
+          Logger.warning(`无法复制模板图标: ${err.message}`);
+        }
+      } else {
+        // 创建一个空白图标
+        trayIcon = nativeImage.createEmpty();
+        Logger.warning('使用空白图标 - 未找到任何图标文件');
+      }
+    } else {
+      // Windows/Linux使用常规图标
+      const iconPath = path.join(assetsDir, 'icon.png');
+      if (fs.existsSync(iconPath)) {
+        trayIcon = iconPath;
+      } else {
+        Logger.warning(`图标不存在: ${iconPath}，使用空图标`);
+        trayIcon = null;
+      }
+    }
+    
+    // 创建托盘
+    tray = new Tray(trayIcon);
     tray.setToolTip('班级魔方GPS签到工具');
     
     // 创建托盘菜单
@@ -79,7 +119,8 @@ function createTray() {
         click: () => {
           if (mainWindow) {
             mainWindow.show();
-            if (process.platform === 'darwin' && !app.dock.isVisible()) {
+            mainWindow.focus();
+            if (process.platform === 'darwin' && app.dock && !app.dock.isVisible()) {
               app.dock.show();
             }
           } else {
@@ -112,6 +153,7 @@ function createTray() {
       {
         label: '退出',
         click: () => {
+          app.isQuitting = true;
           app.quit();
         }
       }
@@ -119,21 +161,27 @@ function createTray() {
     
     tray.setContextMenu(contextMenu);
     
-    // 点击托盘图标显示主窗口
-    tray.on('click', () => {
-      if (mainWindow) {
-        if (mainWindow.isVisible()) {
-          mainWindow.focus();
-        } else {
-          mainWindow.show();
-          if (process.platform === 'darwin' && !app.dock.isVisible()) {
-            app.dock.show();
+    // 特殊处理点击行为
+    if (process.platform === 'darwin') {
+      // macOS上点击托盘图标显示菜单
+      tray.on('click', () => {
+        tray.popUpContextMenu();
+      });
+    } else {
+      // Windows和Linux上点击托盘图标切换窗口显示
+      tray.on('click', () => {
+        if (mainWindow) {
+          if (mainWindow.isVisible()) {
+            mainWindow.hide();
+          } else {
+            mainWindow.show();
+            mainWindow.focus();
           }
+        } else {
+          createWindow();
         }
-      } else {
-        createWindow();
-      }
-    });
+      });
+    }
     
     Logger.info('系统托盘创建成功');
   } catch (error) {
@@ -225,18 +273,43 @@ function createWindow() {
   // 打开开发者工具
   // mainWindow.webContents.openDevTools();
 
-  // 当window被关闭时，触发下面的事件
-  mainWindow.on('closed', function () {
-    mainWindow = null;
+  // 特殊处理关闭行为 - 所有平台上关闭窗口时默认隐藏而不是退出应用
+  mainWindow.on('close', function(event) {
+    if (!app.isQuitting) { // 如果不是真的要退出应用
+      event.preventDefault(); // 阻止默认行为
+      mainWindow.hide(); // 隐藏窗口
+      
+      // 在macOS上，隐藏Dock图标
+      if (process.platform === 'darwin' && app.dock && app.dock.isVisible()) {
+        app.dock.hide();
+      }
+      
+      // 通知用户应用仍在后台运行
+      if (tray) {
+        showNotificationFromTray('应用在后台运行', '应用将继续在后台运行，可以从系统托盘/菜单栏访问');
+      }
+      
+      return false;
+    }
+    
+    // 如果真的要退出，允许默认行为
+    return true;
   });
-  
+
   // 当窗口被最小化时隐藏到托盘
   mainWindow.on('minimize', function(event) {
-    event.preventDefault();
-    mainWindow.hide();
-    if (process.platform === 'darwin') {
-      app.dock.hide(); // 在macOS上隐藏dock图标
+    event.preventDefault(); // 阻止默认的最小化行为
+    mainWindow.hide(); // 隐藏窗口
+    
+    // 在macOS上，隐藏Dock图标
+    if (process.platform === 'darwin' && app.dock && app.dock.isVisible()) {
+      app.dock.hide();
     }
+  });
+  
+  // 当窗口关闭时处理引用
+  mainWindow.on('closed', function() {
+    mainWindow = null;
   });
 }
 
@@ -293,6 +366,29 @@ app.on('window-all-closed', function () {
     // 不调用app.quit()，应用会保持在托盘中运行
   }
 });
+
+// 在退出前的清理工作
+app.on('before-quit', function() {
+  // 标记应用正在退出，允许窗口关闭
+  app.isQuitting = true;
+});
+
+// 添加macOS特定的dock事件
+if (process.platform === 'darwin') {
+  app.on('activate', function() {
+    // 当点击dock图标且没有其他窗口打开时，通常在macOS上重新创建一个窗口
+    if (mainWindow === null) {
+      createWindow();
+    } else if (!mainWindow.isVisible()) {
+      mainWindow.show();
+    }
+    
+    // 确保dock图标可见
+    if (app.dock && !app.dock.isVisible()) {
+      app.dock.show();
+    }
+  });
+}
 
 // 初始化自启动设置
 async function initAutoLaunch() {
