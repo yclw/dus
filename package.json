@@ -1,6 +1,6 @@
 {
   "name": "bjmfapp-gps-signin",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "班级魔方GPS自动签到工具",
   "main": "main.js",
   "scripts": {
